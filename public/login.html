@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Watch Party — Log In</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <h1 id="heading">Log in</h1>
+  <p class="subtitle" id="subtitle">Welcome back</p>
+
+  <input type="text" id="name" placeholder="Your name" style="display:none">
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button id="submit-btn">Log in</button>
+  <div id="error"></div>
+
+  <div class="toggle-link" id="toggle-link">Don't have an account? Sign up</div>
+
+  <script>
+    let mode = 'login'; // or 'signup'
+
+    const heading = document.getElementById('heading');
+    const subtitle = document.getElementById('subtitle');
+    const nameField = document.getElementById('name');
+    const submitBtn = document.getElementById('submit-btn');
+    const toggleLink = document.getElementById('toggle-link');
+    const errorEl = document.getElementById('error');
+
+    toggleLink.addEventListener('click', () => {
+      mode = mode === 'login' ? 'signup' : 'login';
+      errorEl.textContent = '';
+      if (mode === 'signup') {
+        heading.textContent = 'Sign up';
+        subtitle.textContent = 'Create your account';
+        nameField.style.display = 'block';
+        submitBtn.textContent = 'Sign up';
+        toggleLink.textContent = 'Already have an account? Log in';
+      } else {
+        heading.textContent = 'Log in';
+        subtitle.textContent = 'Welcome back';
+        nameField.style.display = 'none';
+        submitBtn.textContent = 'Log in';
+        toggleLink.textContent = "Don't have an account? Sign up";
+      }
+    });
+
+    submitBtn.addEventListener('click', async () => {
+      errorEl.textContent = '';
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const name = document.getElementById('name').value.trim();
+
+      if (!email || !password || (mode === 'signup' && !name)) {
+        errorEl.textContent = 'Please fill in all fields.';
+        return;
+      }
+
+      const endpoint = mode === 'login' ? '/api/login' : '/api/signup';
+      const body = mode === 'login' ? { email, password } : { email, password, name };
+
+      submitBtn.disabled = true;
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Something went wrong.';
+          submitBtn.disabled = false;
+          return;
+        }
+        window.location.href = '/home.html';
+      } catch (err) {
+        errorEl.textContent = 'Could not reach the server.';
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Allow Enter key to submit
+    document.getElementById('password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitBtn.click();
+    });
+  </script>
+</body>
+</html>

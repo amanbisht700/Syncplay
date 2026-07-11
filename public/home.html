@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Watch Party — Home</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="top-bar" style="max-width:480px">
+    <span id="greeting"></span>
+    <button class="secondary" id="logout-btn">Log out</button>
+  </div>
+
+  <h1>Start a watch party</h1>
+  <p class="subtitle">Create a room and share the code with a friend</p>
+  <button id="create-btn">Create room</button>
+
+  <div class="divider">— or —</div>
+
+  <p class="subtitle" style="margin-bottom:0">Join an existing room</p>
+  <input type="text" id="join-code" placeholder="Enter room code" maxlength="6" style="text-transform:uppercase">
+  <button class="secondary" id="join-btn">Join room</button>
+  <div id="error"></div>
+
+  <script>
+    (async () => {
+      const res = await fetch('/api/me');
+      if (!res.ok) { window.location.href = '/login.html'; return; }
+      const user = await res.json();
+      document.getElementById('greeting').textContent = 'Hi, ' + user.name;
+    })();
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+
+    document.getElementById('create-btn').addEventListener('click', async () => {
+      const res = await fetch('/api/rooms', { method: 'POST' });
+      const data = await res.json();
+      if (data.code) window.location.href = '/room.html?code=' + data.code;
+    });
+
+    document.getElementById('join-btn').addEventListener('click', async () => {
+      const code = document.getElementById('join-code').value.trim().toUpperCase();
+      const errorEl = document.getElementById('error');
+      errorEl.textContent = '';
+      if (!code) { errorEl.textContent = 'Enter a room code first.'; return; }
+
+      const res = await fetch('/api/rooms/' + code);
+      if (!res.ok) { errorEl.textContent = 'Room not found.'; return; }
+      window.location.href = '/room.html?code=' + code;
+    });
+
+    document.getElementById('join-code').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('join-btn').click();
+    });
+  </script>
+</body>
+</html>

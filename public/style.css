@@ -1,0 +1,92 @@
+body {
+  font-family: system-ui, sans-serif;
+  background: #111;
+  color: #eee;
+  max-width: 480px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+h1 { font-size: 1.5rem; margin-bottom: 4px; }
+p.subtitle { color: #999; margin-top: 0; }
+input, button {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #1b1b1b;
+  color: #eee;
+  font-size: 1rem;
+}
+button {
+  background: #2d6cdf;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+button:hover { background: #2559bd; }
+button.secondary {
+  background: transparent;
+  border: 1px solid #444;
+}
+button.secondary:hover { background: #1b1b1b; }
+#error {
+  color: #ff8080;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  min-height: 1.2em;
+}
+.toggle-link {
+  text-align: center;
+  margin-top: 16px;
+  color: #8ab;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.divider {
+  text-align: center;
+  color: #555;
+  margin: 24px 0;
+  font-size: 0.85rem;
+}
+.room-code {
+  font-size: 2rem;
+  letter-spacing: 4px;
+  text-align: center;
+  background: #1b1b1b;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid #333;
+}
+.top-bar {
+  max-width: 800px;
+  margin: 0 auto 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.top-bar button {
+  width: auto;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+video {
+  width: 100%;
+  background: black;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+#upload-area {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px dashed #444;
+  border-radius: 8px;
+}
+#status, #presence {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #8ab;
+}
+.wide { max-width: 800px; }

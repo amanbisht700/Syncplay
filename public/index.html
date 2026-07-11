@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Watch Party</title></head>
+<body>
+<script>
+  fetch('/api/me').then(r => {
+    window.location.href = r.ok ? '/home.html' : '/login.html';
+  });
+</script>
+</body>
+</html>

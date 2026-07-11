@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Watch Party — Room</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="wide">
+  <div class="top-bar">
+    <div>
+      <strong>Room: <span id="room-code"></span></strong>
+      <span id="greeting" style="color:#999; margin-left:10px"></span>
+    </div>
+    <div>
+      <button class="secondary" id="copy-btn">Copy code</button>
+      <button class="secondary" id="leave-btn">Leave</button>
+    </div>
+  </div>
+
+  <div id="upload-area">
+    <input type="file" id="video-file" accept="video/*">
+    <button id="upload-btn" style="width:auto; display:inline-block; padding:8px 14px;">Upload & Start</button>
+    <div id="status"></div>
+  </div>
+
+  <video id="player" controls></video>
+  <div id="presence"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const roomCode = (params.get('code') || '').toUpperCase();
+    document.getElementById('room-code').textContent = roomCode;
+
+    if (!roomCode) window.location.href = '/home.html';
+
+    let socket;
+    const player = document.getElementById('player');
+    const status = document.getElementById('status');
+    const presence = document.getElementById('presence');
+    let ignoreNextEvent = false;
+
+    async function init() {
+      const meRes = await fetch('/api/me');
+      if (!meRes.ok) { window.location.href = '/login.html'; return; }
+      const user = await meRes.json();
+      document.getElementById('greeting').textContent = 'you: ' + user.name;
+
+      const roomRes = await fetch('/api/rooms/' + roomCode);
+      if (!roomRes.ok) {
+        alert('Room not found.');
+        window.location.href = '/home.html';
+        return;
+      }
+
+      socket = io();
+      socket.on('connect', () => socket.emit('join-room', roomCode));
+      socket.on('user-joined', (data) => {
+        presence.textContent = data.name + ' joined the room';
+      });
+      socket.on('user-left', (data) => {
+        presence.textContent = data.name + ' left the room';
+      });
+      socket.on('sync-event', (data) => {
+        ignoreNextEvent = true;
+        if (data.type === 'play') { player.currentTime = data.time; player.play(); }
+        else if (data.type === 'pause') { player.currentTime = data.time; player.pause(); }
+        else if (data.type === 'seek') { player.currentTime = data.time; }
+      });
+
+      loadCurrentVideo();
+    }
+
+    async function loadCurrentVideo() {
+      const res = await fetch('/api/rooms/' + roomCode + '/current-video');
+      const data = await res.json();
+      if (data.filename) {
+        player.src = '/video/' + roomCode + '/' + data.filename;
+        status.textContent = 'Loaded: ' + data.filename;
+      }
+    }
+
+    document.getElementById('upload-btn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('video-file');
+      if (!fileInput.files.length) { status.textContent = 'Pick a video file first.'; return; }
+      const formData = new FormData();
+      formData.append('video', fileInput.files[0]);
+      status.textContent = 'Uploading...';
+
+      const res = await fetch('/api/rooms/' + roomCode + '/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.filename) {
+        player.src = '/video/' + roomCode + '/' + data.filename;
+        status.textContent = 'Uploaded! Everyone in the room can now watch.';
+      } else {
+        status.textContent = data.error || 'Upload failed.';
+      }
+    });
+
+    document.getElementById('copy-btn').addEventListener('click', () => {
+      navigator.clipboard.writeText(roomCode);
+      status.textContent = 'Room code copied.';
+    });
+
+    document.getElementById('leave-btn').addEventListener('click', () => {
+      window.location.href = '/home.html';
+    });
+
+    player.addEventListener('play', () => {
+      if (ignoreNextEvent) { ignoreNextEvent = false; return; }
+      socket.emit('sync-event', { type: 'play', time: player.currentTime });
+    });
+    player.addEventListener('pause', () => {
+      if (ignoreNextEvent) { ignoreNextEvent = false; return; }
+      socket.emit('sync-event', { type: 'pause', time: player.currentTime });
+    });
+    let seekTimeout;
+    player.addEventListener('seeked', () => {
+      if (ignoreNextEvent) { ignoreNextEvent = false; return; }
+      clearTimeout(seekTimeout);
+      seekTimeout = setTimeout(() => {
+        socket.emit('sync-event', { type: 'seek', time: player.currentTime });
+      }, 150);
+    });
+
+    init();
+  </script>
+</body>
+</html>
